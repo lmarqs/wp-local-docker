@@ -1,8 +1,28 @@
+**[WP Local Docker V2](https://github.com/10up/wp-local-docker-v2) is now available, please update to that version as v1 is no longer supported. [Documentation available here](https://10up.github.io/wp-local-docker-docs/).**
+
 # WordPress Docker Development Environment
 
-This is a Docker based local development environment for WordPress.
+> This is a Docker based local development environment for WordPress.
 
-## What's Inside
+[![Support Level](https://img.shields.io/badge/support-archived-red.svg)](#support-level) [![MIT License](https://img.shields.io/github/license/10up/wp-local-docker.svg)](https://github.com/10up/wp-local-docker/blob/master/LICENSE.md)
+
+## Table of Contents  
+* [Overview](#overview)
+* [Requirements](#requirements)
+* [Setup](#setup)
+* [Administrative Tools](#administrative-tools)
+* [Docker Compose Overrides File](#docker-compose-overrides-file)
+* [WP CLI](#wp-cli)
+* [SSH Access](#ssh-access)
+* [Useful Bash Aliases](#useful-bash-aliases)
+* [MailCatcher](#mailcatcher)
+* [WP Snapshots](#wp-snapshots)
+* [Xdebug](#xdebug)
+	* [Visual Studio Code](#visual-studio-code)
+* [Updating WP Local Docker](#updating-wp-local-docker)
+* [Credits](#credits)
+
+## Overview
 
 This project is based on [docker-compose](https://docs.docker.com/compose/). By default, the following containers are started: PHP-FPM, MySQL, Elasticsearch, nginx, and Memcached. The `/wordpress` directory is the web root which is mapped to the nginx container.
 
@@ -24,7 +44,7 @@ The `/config/elasticsearch/plugins` folder is mapped to the plugins folder in th
 1. `docker-compose up`
 1. Run setup to download and install WordPress.
 	1. On Linux / Unix / OSX, run `sh bin/setup.sh`.
-	2. On Windows, run `./bin/setup`.
+	2. On Windows, run `.\bin\setup`.
 
 If you want to use a domain other than `http://localhost`, you'll need to:
 1. Add an entry to your hosts file. Ex: `127.0.0.1 docker.localhost`
@@ -101,15 +121,34 @@ There is also a script in the `/bin` directory that will allow you to execute WP
 
 ## SSH Access
 
-You can easily access the WordPress/PHP container with `docker-compose exec`. Here's a simple alias to add to your `~/.bash_profile`:
+You can easily access the WordPress/PHP container with `docker-compose exec:
 
 ```
-alias dcbash='docker-compose exec --user root phpfpm bash'
+docker-compose exec --user root phpfpm bash
 ```
-
-This alias lets you run `dcbash` to SSH into the PHP/WordPress container.
 
 Alternatively, there is a script in the `/bin` directory that allows you to SSH in to the environment from the project directory directly: `./bin/ssh`.
+
+## Useful Bash Aliases
+
+To increase efficiency with WP Local Docker, the following bash aliases can be added `~/.bashrc` or `~/.bash_profile`:
+
+1. WP-CLI:
+    ```bash
+    alias dcwp='docker-compose exec --user www-data phpfpm wp'
+    ```
+2. SSH into container:
+    ```bash
+    alias dcbash='docker-compose exec --user root phpfpm bash'
+    ```
+3. Multiple instances cannot be run simultaneously. In order to switch projects, you'll need to kill all Docker containers first: 
+    ```bash
+    docker-stop() { docker stop $(docker ps -a -q); }
+    ```
+4. Combine the stop-all command with `docker-compose up` to easily start up an instance with one command: 
+    ```bash
+    alias dup="docker-stop && docker-compose up -d"
+    ```
 
 ## MailCatcher
 
@@ -134,6 +173,42 @@ Examples:
 ./bin/wpsnapshots.sh pull <snapshot-id>
 ./bin/wpsnapshots.sh search <search-text>
 ```
+
+## Xdebug
+
+[Xdebug](https://xdebug.org/) is a PHP extension to assist with debugging and development.
+
+In order to use remote Xdebugging follow the instructions below according to your favorite IDE.
+
+### Visual Studio Code
+
+1. Install the [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
+2. In your project, go to the debugger, click the gear icon and choose PHP. A new launch configuration will be created for you.
+3. Set the `pathMappings` settings in your launch.json. Example:
+```json
+"configurations": [
+    {
+        "name": "Listen for XDebug",
+        "type": "php",
+        "request": "launch",
+        "port": 9000,
+        "pathMappings": {
+            "/var/www/html": "${workspaceRoot}/wordpress",
+        }
+    },
+    //...
+]
+```
+
+## Updating WP Local Docker
+
+WP Local Docker is an ever-evolving tool, and it's important to keep your local install up-to-date. Don't forget to `git pull` the latest WP Local Docker code every once in a while to make sure you're running the latest version. We also recommend "watching" this repo on GitHub to stay on top of the latest development. You won’t need to grab every update, but you’ll be aware of bug fixes and enhancements that’ll keep your local development environments running smoothly.
+
+It's especially important to `git pull` the latest code before you `docker pull` upgrades to your Docker images, either as a potential fix for an issue or just to make sure they’re running the latest versions of everything. This will make sure you have the latest WP Local Docker code first, including the `docker-compose.yml` file that defines what Docker images and versions the environment uses.
+
+## Support Level
+
+**Archived:** This project is no longer maintained by 10up.  We are no longer responding to Issues or Pull Requests unless they relate to security concerns.  We encourage interested developers to fork this project and make it their own!
 
 ## Credits
 

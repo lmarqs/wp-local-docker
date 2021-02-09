@@ -28,7 +28,7 @@ scss-lint-report.xml
 config.codekit
 
 /wordpress/*
-!/wordpress/wp-cli.local.yml
+!/wordpress/.gitkeep
 
 /data/*
 !/data/.gitkeep
@@ -42,3 +42,4 @@ notes.md
 /config/elasticsearch/plugins/*
 
 config/wpsnapshots/.wpsnapshots.json
+config/wpsnapshots/config.json

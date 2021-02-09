@@ -7,58 +7,30 @@ if [ -f "./wordpress/wp-config.php" ]; then
 
 	if [ "y" = "$REINSTALL" ]
 	then
-		docker-compose exec --user www-data phpfpm wp db reset --yes
+		docker-compose exec phpfpm su -s /bin/bash www-data -c "wp db reset --yes"
 	else
 		echo "Installation aborted."
 		exit 1
 	fi
 fi
 
-# Ask for the site title
-echo -n "Site title: "
-read TITLE
-
-# Ask for the user name
-echo -n "Username: "
-read ADMIN_USER
-
-# Ask for the user password
-echo -n "Password: "
-read ADMIN_PASSWORD
-
-# Ask for the user email
-echo -n "Your Email: "
-read ADMIN_EMAIL
-
 # Ask for the type of installation
 echo -n "Do you want a multisite installation? [y/n] "
 read MULTISITE
 
 # Install WordPress
-docker-compose exec --user www-data phpfpm wp core download --force
-docker-compose exec -T --user www-data phpfpm wp core config --force
-
-# Set default admin user if none was provided
-if [ "" = "$ADMIN_USER" ]
-then
-	ADMIN_USER="admin"
-fi
-
-# Set default admin password if none was provided
-if [ "" = "$ADMIN_PASSWORD" ]
-then
-	ADMIN_PASSWORD="password"
-fi
+docker-compose exec phpfpm su -s /bin/bash www-data -c "wp core download --force"
+docker-compose exec -T phpfpm su -s /bin/bash www-data -c "wp core config --force"
 
 if [ "y" = "$MULTISITE" ]
 then
-	docker-compose exec --user www-data phpfpm wp core multisite-install --url=localhost --title="$TITLE" --admin_user="$ADMIN_USER" --admin_email="$ADMIN_EMAIL" --admin_password="$ADMIN_PASSWORD"
+	docker-compose exec phpfpm su -s /bin/bash www-data -c "wp core multisite-install --prompt"
 else
-	docker-compose exec --user www-data phpfpm wp core install --url=localhost --title="$TITLE" --admin_user="$ADMIN_USER" --admin_email="$ADMIN_EMAIL" --admin_password="$ADMIN_PASSWORD"
+	docker-compose exec phpfpm su -s /bin/bash www-data -c "wp core install --prompt"
 fi
 
 # Adjust settings
-docker-compose exec --user www-data phpfpm wp rewrite structure "/%postname%/"
+docker-compose exec phpfpm su -s /bin/bash www-data -c "wp rewrite structure "/%postname%/""
 
 # Ask to remove default content ?
 echo -n "Do you want to remove the default content? [y/n] "
@@ -67,53 +39,15 @@ read EMPTY_CONTENT
 if [ "y" = "$EMPTY_CONTENT" ]
 then
 	# Remove all posts, comments, and terms
-	docker-compose exec --user www-data phpfpm wp site empty --yes
+	docker-compose exec phpfpm su -s /bin/bash www-data -c "wp site empty --yes"
 
 	# Remove plugins and themes
-	docker-compose exec --user www-data phpfpm wp plugin delete hello
-	docker-compose exec --user www-data phpfpm wp plugin delete akismet
-	docker-compose exec --user www-data phpfpm wp theme delete twentyfifteen
-	docker-compose exec --user www-data phpfpm wp theme delete twentysixteen
+	docker-compose exec phpfpm su -s /bin/bash www-data -c "wp plugin delete hello akismet"
+	docker-compose exec phpfpm su -s /bin/bash www-data -c "wp theme delete twentyfifteen twentysixteen"
 
 	# Remove widgets
-	docker-compose exec --user www-data phpfpm wp widget delete recent-posts-2
-	docker-compose exec --user www-data phpfpm wp widget delete recent-comments-2
-	docker-compose exec --user www-data phpfpm wp widget delete archives-2
-	docker-compose exec --user www-data phpfpm wp widget delete search-2
-	docker-compose exec --user www-data phpfpm wp widget delete categories-2
-	docker-compose exec --user www-data phpfpm wp widget delete meta-2
-fi
-
-# Ask to install the Monster Widget plugin
-echo -n "Do you want to install the Monster Widget plugin? [y/n] "
-read INSTALL_MONSTER_WIDGET_PLUGIN
-
-if [ "y" = "$INSTALL_MONSTER_WIDGET_PLUGIN" ]
-then
-	docker-compose exec --user www-data phpfpm wp plugin install monster-widget --activate
-	docker-compose exec --user www-data phpfpm wp widget add monster sidebar-1
-fi
-
-# Ask to install the Gutenberg plugin
-echo -n "Do you want to install the Gutenberg plugin? [y/n] "
-read INSTALL_GUTENBERG_PLUGIN
-
-if [ "y" = "$INSTALL_GUTENBERG_PLUGIN" ]
-then
-	docker-compose exec --user www-data phpfpm wp plugin install gutenberg --activate
-fi
-
-# Ask to install the Developer plugin
-echo -n "Do you want to install the Developer plugin? [y/n] "
-read INSTALL_DEVELOPER_PLUGIN
-
-if [ "y" = "$INSTALL_DEVELOPER_PLUGIN" ]
-then
-	docker-compose exec --user www-data phpfpm wp plugin install developer --activate
+	docker-compose exec phpfpm su -s /bin/bash www-data -c "wp widget delete search-2 recent-posts-2 recent-comments-2 archives-2 categories-2 meta-2"
 fi
 
 echo "Installation done."
 echo "------------------"
-echo "Admin username: $ADMIN_USER"
-echo "Admin password: $ADMIN_PASSWORD"
-open http://localhost/wp-login.php
